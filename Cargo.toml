@@ -1,0 +1,11 @@
+[package]
+name = "toml-to-json"
+version = "0.1.0"
+edition = "2021"
+authors = ["ArchTangent"]
+
+[dependencies]
+clap = "4.5"
+serde_json = { version = "1.0" }
+serde-transcode = { version = "1.1" }
+toml = { version = "0.8" }
