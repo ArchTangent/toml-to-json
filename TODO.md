@@ -15,8 +15,13 @@ Options:
 -p, --pretty             format the JSON in human-readable 'pretty' format
 -f, --folder <PATH>      converts all `.toml` files in pecify expected source extension (if not default for type)
 -r, --recursion <DEPTH>  for folder conversion, use specfied recursion depth (default 5)
--m, --modified <WITHIN>  convert only files modified within specified time frame from program start, e.g. `10d`, `5m`, `300s`
+-m, --modified <SINCE>   convert only files modified since <SINCE> ago, e.g. `10d`, `5m`, `300s` from program start
 ```
+
+Sane defaults:
+
+- recursion (5 is fine)
+- modified (any time: always convert if `-m` not specified)
 
 ### Direct File to File conversion (.toml to .json)
 
