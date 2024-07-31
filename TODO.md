@@ -12,10 +12,10 @@ Usage:
 - TGT : target file or folder. File type is detected based on extension
 
 Options:
--p, --pretty             format the JSON in human-readable 'pretty' format
--f, --folder <PATH>      converts all `.toml` files in pecify expected source extension (if not default for type)
--r, --recursion <DEPTH>  for folder conversion, use specfied recursion depth (default 5)
+-p, --pretty             formats JSON output in human-readable 'pretty' format
+-f, --folder <PATH>      converts all `.toml` files in specified folder
 -m, --modified <SINCE>   convert only files modified since <SINCE> ago, e.g. `10d`, `5m`, `300s` from program start
+-r, --recursion <DEPTH>  for folder conversion, use specfied recursion depth (default 0)
 ```
 
 Sane defaults:
