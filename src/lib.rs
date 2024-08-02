@@ -6,9 +6,18 @@ type Error = Box<dyn std::error::Error>;
 mod files;
 mod to_json;
 
-use clap::{Arg, ArgAction, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::fs::File;
+use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
+
+/// The type of filepath, if any, for `<SOURCE>` and `[TARGET]` arguments.
+#[derive(Debug, Clone)]
+pub enum PathType {
+    File(PathBuf),
+    Folder(PathBuf),
+    None,
+}
 
 /// Command line interface (CLI) for the program.
 pub fn cmd() -> Command {
@@ -22,10 +31,10 @@ pub fn cmd() -> Command {
                 .value_name("SOURCE")
                 .required(true)
                 .help("input file or folder"),
-            )
-            // Positional Arg 2: [TARGET]
-            .arg(
-                Arg::new("target")
+        )
+        // Positional Arg 2: [TARGET]
+        .arg(
+            Arg::new("target")
                 .value_name("TARGET")
                 .required(false)
                 .help("output file or folder"),
@@ -46,6 +55,7 @@ pub fn cmd() -> Command {
                 .action(ArgAction::Set)
                 .value_name("SINCE")
                 .value_parser(clap::builder::StringValueParser::new())
+                .num_args(1)
                 .help("converts only files modified since <SINCE> ago, e.g. `10d`"),
         )
         // Option 3: [--recursion -r <DEPTH>]
@@ -56,6 +66,7 @@ pub fn cmd() -> Command {
                 .action(ArgAction::Set)
                 .value_name("DEPTH")
                 .value_parser(clap::builder::RangedU64ValueParser::<u8>::new().range(1..256))
+                .num_args(1)
                 .help("recursion depth when converting a folder of files (default 0)"),
         )
 }

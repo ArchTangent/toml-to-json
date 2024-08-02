@@ -19,7 +19,7 @@ Options:
 
 Sane defaults:
 
-- recursion (5 is fine)
+- recursion (0-5 is fine)
 - modified (any time: always convert if `-m` not specified)
 
 Consider:
@@ -58,7 +58,6 @@ Examples:
 |file   |file   |convert `SOURCE.toml` to `TARGET.json`|
 |folder |none   |convert all `.toml` in `SOURCE` folder to `.json` in the same folder according to recursion `DEPTH` |
 |folder |folder |convert all `.toml` in `SOURCE` folder to `.json` in `TARGET` folder according to recursion `DEPTH`, preserving directory structure |
-
 
 ## Readme File
 
