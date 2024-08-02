@@ -14,17 +14,19 @@ use std::time::{Duration, SystemTime};
 pub fn cmd() -> Command {
     Command::new("tomltojson")
         .author("ArchTangent")
-        .version("0.3.0")
+        .version("0.4.0")
         .about("Converts TOML file(s) to JSON")
-        // Positional Arg 1: <SRC>
+        // Positional Arg 1: <SOURCE>
         .arg(
             Arg::new("source")
+                .value_name("SOURCE")
                 .required(true)
                 .help("input file or folder"),
-        )
-        // Positional Arg 2: [TGT]
-        .arg(
-            Arg::new("target")
+            )
+            // Positional Arg 2: [TARGET]
+            .arg(
+                Arg::new("target")
+                .value_name("TARGET")
                 .required(false)
                 .help("output file or folder"),
         )
@@ -36,15 +38,7 @@ pub fn cmd() -> Command {
                 .action(ArgAction::SetTrue)
                 .help("formats JSON output in human-readable 'pretty' format"),
         )
-        // Option 2: [--folder -f <PATH>]
-        .arg(
-            Arg::new("folder")
-                .short('f')
-                .long("folder")
-                .action(ArgAction::SetTrue)
-                .help("converts TOML files in <SOURCE> input folder up to `--recursion` [DEPTH]"),
-        )
-        // Option 3: [--modified -m <SINCE>]
+        // Option 2: [--modified -m <SINCE>]
         .arg(
             Arg::new("modified")
                 .short('m')
@@ -54,7 +48,7 @@ pub fn cmd() -> Command {
                 .value_parser(clap::builder::StringValueParser::new())
                 .help("converts only files modified since <SINCE> ago, e.g. `10d`"),
         )
-        // Option 4: [--recursion -r <DEPTH>]
+        // Option 3: [--recursion -r <DEPTH>]
         .arg(
             Arg::new("recursion")
                 .short('r')
@@ -62,7 +56,7 @@ pub fn cmd() -> Command {
                 .action(ArgAction::Set)
                 .value_name("DEPTH")
                 .value_parser(clap::builder::RangedU64ValueParser::<u8>::new().range(1..256))
-                .help("recursion depth when `--folder` conversion is set (default 0)"),
+                .help("recursion depth when converting a folder of files (default 0)"),
         )
 }
 
