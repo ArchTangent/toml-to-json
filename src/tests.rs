@@ -1,7 +1,6 @@
 //! Parsing tests for `tomltojson`.
 
-use std::time::Duration;
-use tomltojson::*;
+use crate::*;
 
 #[test]
 fn parse_modified_value() {
