@@ -13,6 +13,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::fs::{File, FileType};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
+use to_json::JsonFormat;
 
 /// The type of filepath, if any, for `<SOURCE>` and `[TARGET]` arguments.
 #[derive(Debug, Clone, Copy)]
@@ -20,25 +21,6 @@ pub enum PathType {
     File,
     Folder,
     None,
-}
-
-/// Filepaths for `<SOURCE>` and `[TARGET]` arguments, and whether paths are for
-/// file-to-file or folder-to-folder conversion.
-#[derive(Debug, Clone)]
-pub struct FilePaths {
-    source: PathBuf,
-    target: PathBuf,
-    kind: PathType,
-}
-
-impl FilePaths {
-    pub fn new(source: PathBuf, target: PathBuf, kind: PathType) -> Self {
-        Self {
-            source,
-            target,
-            kind,
-        }
-    }
 }
 
 /// Command line interface (CLI) for the program.
@@ -93,7 +75,25 @@ pub fn cmd() -> Command {
         )
 }
 
-/// Parses `<SOURCE>` and `[TARGET]` arguments as files or folders.
+/// Parses `<SOURCE>` argument as a file or folder path.
+///
+/// Returns the path and filetype (file, folder, or None).
+pub fn parse_source(matches: &ArgMatches) -> Result<(PathBuf, PathType)> {
+    match matches.get_one::<&String>("source") {
+        Some(fp) => {
+            let src_fp = PathBuf::from(fp);
+
+            if src_fp.is_file() {
+                Ok((src_fp, PathType::File))
+            } else {
+                Ok((src_fp, PathType::Folder))
+            }
+        }
+        None => Err("SOURCE is a required argument".into()),
+    }
+}
+
+/// Parses `[TARGET]` argument as a file or folder path.
 ///
 /// If `SOURCE` is a __file__ and `TARGET` is:
 /// - None:   convert `SOURCE` to .json file of same name.
@@ -105,55 +105,34 @@ pub fn cmd() -> Command {
 /// - file:   returns an error, as the target path must be a folder.
 /// - folder: convert `SOURCE` to .json file of given folder.
 ///
-pub fn parse_source_target(matches: &ArgMatches) -> Result<FilePaths> {
-    let src_fp = PathBuf::from(
-        matches
-            .get_one::<&String>("source")
-            .expect("SOURCE is a required argument"),
-    );
+pub fn parse_target(matches: &ArgMatches, src_fp: &PathBuf, src_pt: PathType) -> Result<PathBuf> {
     let tgt_arg: Option<&String> = matches.get_one("target");
 
-    let src = if src_fp.is_file() {
-        PathType::File
-    } else {
-        PathType::Folder
-    };
-
-    let (tgt, tgt_fp) = if let Some(fp) = tgt_arg {
+    let tgt_fp = if let Some(fp) = tgt_arg {
+        // Target argument specified - ensure it's file-to-file or folder-to-folder
         let tgt_fp = PathBuf::from(fp);
 
-        if tgt_fp.is_dir() {
-            (PathType::Folder, tgt_fp)
-        } else {
-            (PathType::File, tgt_fp)
+        match (src_pt, tgt_fp.is_file(), tgt_fp.is_dir()) {
+            (PathType::File, false, true) => {
+                return Err("SOURCE / TARGET must be file-file or dir-dir!".into())
+            }
+            (PathType::Folder, true, false) => {
+                return Err("SOURCE / TARGET must be file-file or dir-dir!".into())
+            }
+            _ => (),
         }
+        tgt_fp
     } else {
-        // No target specified - set according to source
+        // No target specified - set target according to source
         let mut tgt_fp = src_fp.clone();
-        match src {
-            PathType::File => {
-                tgt_fp.pop();
-            }
-            PathType::Folder => {
-                tgt_fp.set_extension("json");
-            }
-            PathType::None => (),
+
+        if let PathType::File = src_pt {
+            tgt_fp.set_extension("json");
         }
-        (src, tgt_fp)
+        tgt_fp
     };
 
-    match (src, tgt) {
-        (PathType::File, PathType::None) => Ok(FilePaths::new(src_fp, tgt_fp, src)),
-        (PathType::File, PathType::File) => Ok(FilePaths::new(src_fp, tgt_fp, src)),
-        (PathType::File, PathType::Folder) => Ok(FilePaths::new(src_fp, tgt_fp, src)),
-        (PathType::Folder, PathType::None) => Ok(FilePaths::new(src_fp, tgt_fp, src)),
-        (PathType::Folder, PathType::Folder) => Ok(FilePaths::new(src_fp, tgt_fp, src)),
-        // Errors
-        (PathType::Folder, PathType::File) => {
-            Err("SOURCE folder must have a folder as a TARGET".into())
-        }
-        _ => Err("SOURCE is a required argument".into()),
-    }
+    Ok(tgt_fp)
 }
 
 /// Parses time modified limit (`--modified, -m`) for comparison against a file's time modified.
@@ -163,7 +142,12 @@ pub fn parse_source_target(matches: &ArgMatches) -> Result<FilePaths> {
 /// - values ending in `m` are 'minutes', e.g. `10m`
 /// - values ending in `h` are 'hours', e.g. `1h`
 /// - values ending in `d` are 'days', e.g. `30d`
-pub fn parse_modified(m: &str) -> Result<Duration> {
+pub fn parse_modified(matches: &ArgMatches) -> Result<Duration> {
+    let m: &String = match matches.get_one("modified") {
+        Some(m) => m,
+        None => return Ok(Duration::MAX),
+    };
+
     if let (true, Some(days_str)) = (m.ends_with('d'), m.strip_suffix('d')) {
         if let Ok(days) = days_str.parse::<u64>() {
             return Ok(Duration::from_secs(days * 86400));
@@ -188,6 +172,16 @@ pub fn parse_modified(m: &str) -> Result<Duration> {
     Err("`--modified`: invalid duration specified.".into())
 }
 
+/// Parses recursion depth. Defaults to `0` if not given.
+pub fn parse_recursion(matches: &ArgMatches) -> Result<usize> {
+    let depth: usize = match matches.get_one("recursion") {
+        Some(d) => *d,
+        None => 0,
+    };
+
+    Ok(depth)
+}
+
 /// Returns `true` if file is eligible for transcoding.
 ///
 /// Eligible file was modified more recently than `--modified` time threshold.
@@ -205,11 +199,43 @@ pub fn get_time_modified(file: &File) -> Result<Duration> {
     Ok(elapsed)
 }
 
+/// Command line interface.
+///
+/// Gathers matches and returns bytes read (file to file conversion) or
+/// number of files converted (foldeer to folder conversion).
+fn cli(matches: &ArgMatches) -> Result<usize> {
+    let (source, pathtype) = parse_source(matches)?;
+    let target = parse_target(matches, &source, pathtype)?;
+    let modified = parse_modified(matches)?;
+    let recursion = parse_recursion(matches)?;
+    let pretty = match matches.contains_id("pretty") {
+        true => JsonFormat::Pretty,
+        false => JsonFormat::Normal,
+    };
+
+    let result = match pathtype {
+        PathType::File => to_json::from_toml(&source, &target, pretty),
+        PathType::Folder => to_json::from_toml_folder(&source, &target, pretty),
+        PathType::None => unreachable!("SOURCE is a required argument!"),
+    };
+
+    result
+}
+
 fn main() {
     println!("--- TOML to JSON ---");
 
-    let matches = cmd().get_matches();
-    for m in matches.ids() {
-        println!("{m}");
+    // let matches = cmd().get_matches();
+    // for m in matches.ids() {
+    //     println!("{m}");
+    // }
+
+    let error_strs = ["24hr", "abc", "a30m", "60j"];
+
+    for error_str in error_strs.iter() {
+        let error_args = ["tomltojson", "/foo", "-m", error_str];
+        let error_matches = cmd().get_matches_from(&error_args);
+        let pm = parse_modified(&error_matches);
+        println!("pm: {pm:?}");
     }
 }

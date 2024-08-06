@@ -3,26 +3,38 @@
 use crate::*;
 
 #[test]
-fn parse_modified_value() {
-    let valid_strs = ["30d", "60s", "60m", "24h"];
+fn parse_modified_value() {   
+    let valid_args = ["tomltojson", "/foo"];
+    let matches = cmd().get_matches_from(&valid_args);
+    let actual = parse_modified(&matches).unwrap();
+    assert_eq!(actual, Duration::MAX);
+
+    let valid_args = ["tomltojson", "/foo", "-m", "30d"];
+    let matches = cmd().get_matches_from(&valid_args);
+    let actual = parse_modified(&matches).unwrap();
+    assert_eq!(actual, Duration::from_secs(2592000));
+
+    let valid_args = ["tomltojson", "/foo", "-m", "60s"];
+    let matches = cmd().get_matches_from(&valid_args);
+    let actual = parse_modified(&matches).unwrap();
+    assert_eq!(actual, Duration::from_secs(60));
+
+    let valid_args = ["tomltojson", "/foo", "-m", "60m"];
+    let matches = cmd().get_matches_from(&valid_args);
+    let actual = parse_modified(&matches).unwrap();
+    assert_eq!(actual, Duration::from_secs(3600));
+
+    let valid_args = ["tomltojson", "/foo", "-m", "24h"];
+    let matches = cmd().get_matches_from(&valid_args);
+    let actual = parse_modified(&matches).unwrap();
+    assert_eq!(actual, Duration::from_secs(86400));    
+
     let error_strs = ["24hr", "abc", "a30m", "60j"];
 
-    let actual: Vec<Duration> = valid_strs
-        .iter()
-        .map(|s| parse_modified(s).unwrap())
-        .collect();
-
-    let expected = vec![
-        Duration::from_secs(2592000),
-        Duration::from_secs(60),
-        Duration::from_secs(3600),
-        Duration::from_secs(86400),
-    ];
-
-    assert_eq!(actual, expected);
-
     for error_str in error_strs.iter() {
-        assert!(parse_modified(error_str).is_err())
+        let error_args = ["tomltojson", "/foo", "-m", error_str];
+        let error_matches = cmd().get_matches_from(&error_args);
+        assert!(parse_modified(&error_matches).is_err())
     }
 }
 

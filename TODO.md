@@ -26,21 +26,10 @@ Consider:
 
 - custom extensions: (other than `.toml` for source or `.json` for target)
 
-### Direct File to File conversion (.toml to .json)
+### Recursion (folder to folder)
 
-Ways to use:
-
-1. Enter the source file, creating target `.json` file in the same directory.
-
-2. Enter the source and target file, creating JSON files as specified target filepath.
-
-### Folder to Folder conversion (folder of .toml to folder of .json)
-
-Ways to use:
-
-1. Enter the source folder, creating target `.json` files in the same directory as each `.toml` file found.
-
-2. Enter the source and target folders, creating `.json` files in target folder, preserving same directory structure as that found in source.
+- for starters, use `from_toml_folder()` to convert files in `source` folder to files in existing `target` folder
+- later, , use `from_toml_folders()` with _recursion_ to get _subfolders_, preserving subdirectory structure under `target`
 
 ### Check 'last modified' time to convert only files modified within last `<TIME>`
 

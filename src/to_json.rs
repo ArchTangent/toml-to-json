@@ -1,6 +1,6 @@
 //! Conversion to JSON.
 
-use crate::files::open;
+use crate::files::{open, get_filepaths};
 use crate::Result;
 use serde_json::Serializer;
 use std::fs::{write, File};
@@ -14,6 +14,27 @@ pub enum JsonFormat {
     Pretty,
 }
 
+/// Transcodes TOML files in a folder to JSON files in target folder, using selected 
+/// formatting and recursion depth.
+///
+/// Where:
+/// - `fp_in` is the filepath of the source folder.
+/// - `fp_out` is the filepath or the target folder.
+///
+/// Returns the number of files converted.
+pub fn from_toml_folders(fp_in: &Path, fp_out: &Path, recursion: usize, formatting: JsonFormat) -> Result<usize> {
+    // TODO: gather all source folders (in fp_in) according to recursion depth
+    // TODO: for each folder, call `from_toml_folder()`
+    // TODO: keep `root` (`fp_in`), adding subfolder paths under `root` to `fp_out`, ensuring folder exists
+    
+
+    // TODO: let root = `fp_in`.clone();
+    // TODO: let subdirs = get_subfolders(fp_in)
+    // TODO: for src_subdir in subdirs: tgt_subdir = fp_out + src_subdir.strip_prefix(fp_in)
+    // TODO: from_toml_folder(src_subdir, tgt_subdir)
+    todo!()
+}
+
 /// Transcodes TOML files in a folder to JSON files in target folder, using selected formatting.
 ///
 /// Where:
@@ -23,6 +44,8 @@ pub enum JsonFormat {
 /// Returns the number of files converted.
 pub fn from_toml_folder(fp_in: &Path, fp_out: &Path, formatting: JsonFormat) -> Result<usize> {
     // TODO: for each TOML file in `fp_in` according to recursion, call `from_toml(toml, json)`
+    // TODO: for each `parse_...()` function, take ArgMatches as an input
+    // TODO: redo with parse_source(&ArgMatches) and parse_target(&ArgMatches, source)
     todo!()
 }
 
