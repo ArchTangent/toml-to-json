@@ -1,6 +1,6 @@
 //! Conversion to JSON.
 
-use crate::files::{open, get_filepaths};
+use crate::files::{get_filepaths, get_subfolders, open};
 use crate::Result;
 use serde_json::Serializer;
 use std::fs::{write, File};
@@ -32,7 +32,30 @@ pub fn from_toml_folders(fp_in: &Path, fp_out: &Path, recursion: usize, formatti
     // TODO: let subdirs = get_subfolders(fp_in)
     // TODO: for src_subdir in subdirs: tgt_subdir = fp_out + src_subdir.strip_prefix(fp_in)
     // TODO: from_toml_folder(src_subdir, tgt_subdir)
-    todo!()
+
+    // TODO: `--nested` option, if true, maintains subdirectory structure of `SOURCE` in the `TARGET` folder.
+    // TODOO: otherwise, outputs all converted files directly to `TARGET` folder
+    // TODO: When using the `--nested` option on some OSes, the program will crash if a given nested `target` subfolder does not already exist. See `std::fs::write()` for more.
+
+    println!("[from_toml_folders] fp_in: {:?}, fp_out: {:?}", fp_in, fp_out);
+
+    let mut num_files = 0;
+
+    for src_subdir in get_subfolders(fp_in, recursion)?.iter() {
+        let stripped_subdir = src_subdir.strip_prefix(fp_in)?;
+        let mut tgt_subdir = PathBuf::from(fp_out);
+        tgt_subdir.push(stripped_subdir);
+        
+        if tgt_subdir.is_dir() {
+            println!("  tgt_subdir {:?} exists!", tgt_subdir);
+        } else {
+            println!("  tgt_subdir {:?} does not exist!", tgt_subdir);
+        }
+
+        num_files += from_toml_folder(&src_subdir, &tgt_subdir, formatting)?;
+    }
+
+    Ok(num_files)
 }
 
 /// Transcodes TOML files in a folder to JSON files in target folder, using selected formatting.
@@ -46,7 +69,8 @@ pub fn from_toml_folder(fp_in: &Path, fp_out: &Path, formatting: JsonFormat) -> 
     // TODO: for each TOML file in `fp_in` according to recursion, call `from_toml(toml, json)`
     // TODO: for each `parse_...()` function, take ArgMatches as an input
     // TODO: redo with parse_source(&ArgMatches) and parse_target(&ArgMatches, source)
-    todo!()
+    println!("[from_toml_folder] fp_in: {:?}, fp_out: {:?}", fp_in, fp_out);
+    Ok(1)
 }
 
 /// Transcodes a TOML file into a JSON file using selected formatting.

@@ -13,7 +13,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::fs::{File, FileType};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
-use to_json::JsonFormat;
+use to_json::{from_toml_folders, JsonFormat};
 
 /// The type of filepath, if any, for `<SOURCE>` and `[TARGET]` arguments.
 #[derive(Debug, Clone, Copy)]
@@ -230,12 +230,8 @@ fn main() {
     //     println!("{m}");
     // }
 
-    let error_strs = ["24hr", "abc", "a30m", "60j"];
-
-    for error_str in error_strs.iter() {
-        let error_args = ["tomltojson", "/foo", "-m", error_str];
-        let error_matches = cmd().get_matches_from(&error_args);
-        let pm = parse_modified(&error_matches);
-        println!("pm: {pm:?}");
-    }
+    let src = PathBuf::from(".\\data_toml");
+    let tgt = PathBuf::from(".\\data_json");
+    let folders = from_toml_folders(&src, &tgt, 2, JsonFormat::Normal).unwrap();
+    println!("number of folders converted: {folders}");
 }
