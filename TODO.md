@@ -18,6 +18,12 @@ Consider:
 
 When using the `--nested` option on some OSes, the program will crash if a given nested `target` subfolder does not already exist. See `std::fs::write()` for more.
 
+### Modified filtering
+
+- for `from_toml_folders()`
+- for `from_toml_folders()`
+- for `from_toml()`
+
 ## Readme File
 
 Usage

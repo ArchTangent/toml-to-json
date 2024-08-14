@@ -2,6 +2,7 @@
 
 use std::fmt::{Debug, Display};
 use std::fs::{self, File};
+use std::time::{Duration, SystemTime};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use crate::Result;
@@ -15,7 +16,7 @@ pub fn open<P: AsRef<Path> + Debug>(path: P) -> Result<File> {
 /// Gets filepaths for files of specified `extension` in the folder path.
 ///
 /// Can search recursively through folders according to `recursion` parameter.
-pub fn get_filepaths<P>(
+pub fn get_files<P>(
     path: P,
     recursion: usize,
     extension: &str,
@@ -32,7 +33,7 @@ where
             let path = entry.path();
             if path.is_dir() {
                 if recursion > 0 {
-                    let nested = get_filepaths(&path, recursion - 1, extension)?;
+                    let nested = get_files(&path, recursion - 1, extension)?;
                     result.extend(nested.iter().cloned());
                 }
             } else {
@@ -81,4 +82,13 @@ where
     }
 
     Ok(result)
+}
+
+/// Gets the date modified for a file at given path, expressed as a `Duration`.
+pub fn get_time_modified(file: &File) -> Result<Duration> {
+    let modified = file.metadata()?.modified()?;
+
+    let elapsed = SystemTime::now().duration_since(modified)?;
+
+    Ok(elapsed)
 }

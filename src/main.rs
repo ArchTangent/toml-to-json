@@ -13,7 +13,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::fs::{File, FileType};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
-use to_json::{from_toml_folders, JsonFormat};
+use to_json::{from_toml_folders, JsonFormat, Subdirs};
 
 /// The type of filepath, if any, for `<SOURCE>` and `[TARGET]` arguments.
 #[derive(Debug, Clone, Copy)]
@@ -57,10 +57,10 @@ pub fn cmd() -> Command {
                 .short('m')
                 .long("modified")
                 .action(ArgAction::Set)
-                .value_name("SINCE")
+                .value_name("TIME")
                 .value_parser(clap::builder::StringValueParser::new())
                 .num_args(1)
-                .help("converts only files modified since <SINCE> ago, e.g. `10d`"),
+                .help("converts only files modified within the past <TIME>, e.g. `60s`, `30m`, `24h`, `10d`"),
         )
         // Option 3: [--recursion -r <DEPTH>]
         .arg(
@@ -182,40 +182,26 @@ pub fn parse_recursion(matches: &ArgMatches) -> Result<usize> {
     Ok(depth)
 }
 
-/// Returns `true` if file is eligible for transcoding.
-///
-/// Eligible file was modified more recently than `--modified` time threshold.
-pub fn is_transcode_eligible(file: &File, threshold: Duration) -> Result<bool> {
-    let modified_time = get_time_modified(file)?;
-    Ok(modified_time < threshold)
-}
-
-/// Gets the date modified for a file at given path, expressed as seconds.
-pub fn get_time_modified(file: &File) -> Result<Duration> {
-    let modified = file.metadata()?.modified()?;
-
-    let elapsed = SystemTime::now().duration_since(modified)?;
-
-    Ok(elapsed)
-}
-
 /// Command line interface.
 ///
-/// Gathers matches and returns bytes read (file to file conversion) or
-/// number of files converted (foldeer to folder conversion).
+/// Gathers matches and returns the number of files converted..
 fn cli(matches: &ArgMatches) -> Result<usize> {
     let (source, pathtype) = parse_source(matches)?;
     let target = parse_target(matches, &source, pathtype)?;
     let modified = parse_modified(matches)?;
     let recursion = parse_recursion(matches)?;
-    let pretty = match matches.contains_id("pretty") {
+    let formatting = match matches.contains_id("pretty") {
         true => JsonFormat::Pretty,
         false => JsonFormat::Normal,
     };
+    let nesting = match matches.contains_id("nested") {
+        true => Subdirs::Nested,
+        false => Subdirs::Flat,
+    };
 
     let result = match pathtype {
-        PathType::File => to_json::from_toml(&source, &target, pretty),
-        PathType::Folder => to_json::from_toml_folder(&source, &target, pretty),
+        PathType::File => to_json::from_toml(&source, &target, None, formatting),
+        PathType::Folder => to_json::from_toml_folders(&source, &target, modified, recursion, nesting, formatting),
         PathType::None => unreachable!("SOURCE is a required argument!"),
     };
 
@@ -225,13 +211,13 @@ fn cli(matches: &ArgMatches) -> Result<usize> {
 fn main() {
     println!("--- TOML to JSON ---");
 
-    // let matches = cmd().get_matches();
-    // for m in matches.ids() {
-    //     println!("{m}");
-    // }
-
+    // TODO: remove when done testing
     let src = PathBuf::from(".\\data_toml");
     let tgt = PathBuf::from(".\\data_json");
-    let folders = from_toml_folders(&src, &tgt, 2, JsonFormat::Normal).unwrap();
-    println!("number of folders converted: {folders}");
+
+    let pretty = JsonFormat::Normal;
+    let nested = Subdirs::Nested;
+    let modified = Duration::MAX;
+    let folders = from_toml_folders(&src, &tgt, modified, 3,  nested, pretty).unwrap();
+    println!("number of files converted: {folders}");
 }

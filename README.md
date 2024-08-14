@@ -17,3 +17,5 @@ Options:
 -r, --recursion <DEPTH>  for folder conversion, use specfied recursion depth (default 0)
 -n, --nested             for folder conversion with recursion > 0, preserve subdirectory structure of SOURCE in TARGET
 ```
+
+_Note_: when using the `--nested` option on some OSes, the program will crash if a given nested `TARGET` subfolder does not already exist.
