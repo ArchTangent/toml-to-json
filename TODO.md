@@ -11,6 +11,10 @@ Consider:
 
 - custom extensions: (other than `.toml` for source or `.json` for target)
 
+Command `help`:
+
+- file-to-file conversion _always_ converts - `--modified` does not apply
+
 ### Recursion (folder to folder)
 
 - for starters, use `from_toml_folder()` to convert files in `source` folder to files in existing `target` folder

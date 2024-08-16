@@ -34,14 +34,14 @@ pub fn cmd() -> Command {
             Arg::new("source")
                 .value_name("SOURCE")
                 .required(true)
-                .help("input file or folder"),
+                .help("Input file or folder"),
         )
         // Positional Arg 2: [TARGET]
         .arg(
             Arg::new("target")
                 .value_name("TARGET")
                 .required(false)
-                .help("output file or folder"),
+                .help("Output file or folder"),
         )
         // Option 1: [--pretty -p]
         .arg(
@@ -49,7 +49,7 @@ pub fn cmd() -> Command {
                 .short('p')
                 .long("pretty")
                 .action(ArgAction::SetTrue)
-                .help("formats JSON output in human-readable 'pretty' format"),
+                .help("Formats JSON output in human-readable 'pretty' format"),
         )
         // Option 2: [--modified -m <SINCE>]
         .arg(
@@ -60,7 +60,10 @@ pub fn cmd() -> Command {
                 .value_name("TIME")
                 .value_parser(clap::builder::StringValueParser::new())
                 .num_args(1)
-                .help("converts only files modified within the past <TIME>, e.g. `60s`, `30m`, `24h`, `10d`"),
+                // .help("converts only files modified within the past <TIME>, e.g. `60s`, `30m`, `24h`, `10d`"),
+                .help("Converts only files modified within the past <TIME>.\
+                \nExamples:\n- seconds: `10s`, `20s`\n- minutes: `30m`, `60m`\n- hours: `12h`, `24h`\
+                \n- days: `31d`, `365d`"),
         )
         // Option 3: [--recursion -r <DEPTH>]
         .arg(
@@ -71,7 +74,7 @@ pub fn cmd() -> Command {
                 .value_name("DEPTH")
                 .value_parser(clap::builder::RangedU64ValueParser::<u8>::new().range(1..256))
                 .num_args(1)
-                .help("recursion depth when converting a folder of files (default 0)"),
+                .help("Recursion depth when converting a folder of files (default 0)"),
         )
 }
 
@@ -211,13 +214,16 @@ fn cli(matches: &ArgMatches) -> Result<usize> {
 fn main() {
     println!("--- TOML to JSON ---");
 
-    // TODO: remove when done testing
-    let src = PathBuf::from(".\\data_toml");
-    let tgt = PathBuf::from(".\\data_json");
+    let c = cmd().print_help();
+    
 
-    let pretty = JsonFormat::Normal;
-    let nested = Subdirs::Nested;
-    let modified = Duration::MAX;
-    let folders = from_toml_folders(&src, &tgt, modified, 3,  nested, pretty).unwrap();
-    println!("number of files converted: {folders}");
+    // TODO: remove when done testing
+    // let src = PathBuf::from(".\\data_toml");
+    // let tgt = PathBuf::from(".\\data_json");
+
+    // let pretty = JsonFormat::Normal;
+    // let nested = Subdirs::Nested;
+    // let modified = Duration::MAX;
+    // let folders = from_toml_folders(&src, &tgt, modified, 3,  nested, pretty).unwrap();
+    // println!("number of files converted: {folders}");
 }
