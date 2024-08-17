@@ -14,8 +14,7 @@ Arguments:
 Options:
 -p, --pretty             formats JSON output in human-readable 'pretty' format
 -m, --modified <SINCE>   convert only files modified since <SINCE> ago, e.g. `10d`, `5m`, `300s` from program start
--r, --recursion <DEPTH>  for folder conversion, use specfied recursion depth (default 0)
--n, --nested             for folder conversion with recursion > 0, preserve subdirectory structure of SOURCE in TARGET
+-r, --recursion <DEPTH>  for folder-to-folder conversion, use specfied recursion depth (default 0)
 ```
 
-_Note_: when using the `--nested` option on some OSes, the program will crash if a given nested `TARGET` subfolder does not already exist.
+_Note_: when `SOURCE` is a folder and `TARGET` is set `TARGET` must be a folder. If `--recursion > 0`, any subdirectory in `SOURCE` must have of subdirectory of _the same name_ in `TARGET`.

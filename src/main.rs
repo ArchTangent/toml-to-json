@@ -13,7 +13,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::fs::{File, FileType};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
-use to_json::{from_toml_folders, JsonFormat, Subdirs};
+use to_json::{from_toml_folders, JsonFormat};
 
 /// The type of filepath, if any, for `<SOURCE>` and `[TARGET]` arguments.
 #[derive(Debug, Clone, Copy)]
@@ -197,14 +197,10 @@ fn cli(matches: &ArgMatches) -> Result<usize> {
         true => JsonFormat::Pretty,
         false => JsonFormat::Normal,
     };
-    let nesting = match matches.contains_id("nested") {
-        true => Subdirs::Nested,
-        false => Subdirs::Flat,
-    };
 
     let result = match pathtype {
         PathType::File => to_json::from_toml(&source, &target, None, formatting),
-        PathType::Folder => to_json::from_toml_folders(&source, &target, modified, recursion, nesting, formatting),
+        PathType::Folder => to_json::from_toml_folders(&source, &target, modified, recursion, formatting),
         PathType::None => unreachable!("SOURCE is a required argument!"),
     };
 
@@ -216,14 +212,12 @@ fn main() {
 
     // let c = cmd().print_help();    
 
-    // TODO: debug `Flat` working like `Nested option`
     // TODO: remove when done testing
     let src = PathBuf::from(".\\data_toml");
     let tgt = PathBuf::from(".\\data_json");
 
     let pretty = JsonFormat::Normal;
-    let nested = Subdirs::Flat;
     let modified = Duration::MAX;
-    let folders = from_toml_folders(&src, &tgt, modified, 3,  nested, pretty).unwrap();
+    let folders = from_toml_folders(&src, &tgt, modified, 3,  pretty).unwrap();
     println!("number of files converted: {folders}");
 }

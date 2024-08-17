@@ -15,15 +15,6 @@ pub enum JsonFormat {
     Pretty,
 }
 
-/// Determines the nesting of target subdirectories.
-///
-/// Applies only for folder-to-folder conversions with `--recursion > 0`.
-#[derive(Clone, Copy, Debug)]
-pub enum Subdirs {
-    Flat,
-    Nested,
-}
-
 /// Transcodes TOML files in a folder to JSON files in target folder, using selected
 /// formatting and recursion depth.
 ///
@@ -40,25 +31,11 @@ pub fn from_toml_folders(
     target: &Path,
     modified: Duration,
     recursion: usize,
-    nesting: Subdirs,
     formatting: JsonFormat,
 ) -> Result<usize> {
-    // TODO: gather all source folders (in fp_in) according to recursion depth
-    // TODO: for each folder, call `from_toml_folder()`
-    // TODO: keep `root` (`fp_in`), adding subfolder paths under `root` to `fp_out`, ensuring folder exists
-
-    // TODO: let root = `fp_in`.clone();
-    // TODO: let subdirs = get_subfolders(fp_in)
-    // TODO: for src_subdir in subdirs: tgt_subdir = fp_out + src_subdir.strip_prefix(fp_in)
-    // TODO: from_toml_folder(src_subdir, tgt_subdir)
-
-    // TODO: `--nested` option, if true, maintains subdirectory structure of `SOURCE` in the `TARGET` folder.
-    // TODOO: otherwise, outputs all converted files directly to `TARGET` folder
-    // TODO: When using the `--nested` option on some OSes, the program will crash if a given nested `target` subfolder does not already exist. See `std::fs::write()` for more.
-
     println!(
-        "[from_toml_folders] fp_in: {:?}, fp_out: {:?}, recursion {:?}, nesting: {:?}",
-        source, target, recursion, nesting
+        "[from_toml_folders] fp_in: {:?}, fp_out: {:?}, recursion {:?}",
+        source, target, recursion
     );
 
     // TODO: modified filter
@@ -66,18 +43,11 @@ pub fn from_toml_folders(
     let mut num_files = 0;
 
     for src_subdir in get_subfolders(source, recursion)?.iter() {
-        match nesting {
-            Subdirs::Flat => {
-                num_files += from_toml_folder(&src_subdir, &target, modified, formatting)?;
-            }
-            Subdirs::Nested => {
-                let stripped_subdir = src_subdir.strip_prefix(source)?;
-                let mut tgt_subdir = PathBuf::from(target);
-                tgt_subdir.push(stripped_subdir);
+        let stripped_subdir = src_subdir.strip_prefix(source)?;
+        let mut tgt_subdir = PathBuf::from(target);
+        tgt_subdir.push(stripped_subdir);
 
-                num_files += from_toml_folder(&src_subdir, &tgt_subdir, modified, formatting)?;
-            }
-        };
+        num_files += from_toml_folder(&src_subdir, &tgt_subdir, modified, formatting)?;
     }
 
     Ok(num_files)
@@ -112,7 +82,7 @@ pub fn from_toml_folder(
         let mut fp_out = PathBuf::from(target);
         let file_out = fp_in.file_name().expect("expected a file");
         fp_out.push(file_out);
-        fp_out.set_extension("toml");
+        fp_out.set_extension("json");
         num_files += from_toml(fp_in, &fp_out, Some(modified), formatting)?;
     }
 
