@@ -18,7 +18,7 @@ pub enum JsonFormat {
 /// Determines the nesting of target subdirectories.
 ///
 /// Applies only for folder-to-folder conversions with `--recursion > 0`.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Subdirs {
     Flat,
     Nested,
@@ -57,8 +57,8 @@ pub fn from_toml_folders(
     // TODO: When using the `--nested` option on some OSes, the program will crash if a given nested `target` subfolder does not already exist. See `std::fs::write()` for more.
 
     println!(
-        "[from_toml_folders] fp_in: {:?}, fp_out: {:?}",
-        source, target
+        "[from_toml_folders] fp_in: {:?}, fp_out: {:?}, recursion {:?}, nesting: {:?}",
+        source, target, recursion, nesting
     );
 
     // TODO: modified filter
@@ -134,41 +134,43 @@ pub fn from_toml(
     formatting: JsonFormat,
 ) -> Result<usize> {
     println!("[from_toml] fp_in: {:?}, fp_out: {:?}", fp_in, fp_out);
-    let mut file = open(fp_in)?;
-    println!("[from_toml] file opened...");
-    let file_modified = get_time_modified(&file)?;
 
+    let mut file = open(fp_in)?;
+    let file_modified = get_time_modified(&file)?;
+    
+    // If file was modified before threshold; do not convert
     if let Some(threshold) = modified {
         println!(
             "[from_toml] threshold: {:?}, file modified: {:?}",
             threshold, file_modified
         );
+        if threshold < file_modified {
+            println!("[from_toml] threshold < modified -> do not convert");
+            return Ok(0);
+        }
     }
 
-    Ok(1)
+    let mut buf = Vec::new();
+    let _bytes_read = file.read_to_end(&mut buf)?;
 
-    // TODO: uncomment when done
-    // let mut buf = Vec::new();
-    // let _bytes_read = file.read_to_end(&mut buf)?;
+    let toml_str = std::str::from_utf8(&buf)?;
 
-    // let toml_str = std::str::from_utf8(&buf)?;
+    let deserializer = toml::de::Deserializer::new(toml_str);
+    let writer = BufWriter::new(File::create(&fp_out)?);
 
-    // let deserializer = toml::de::Deserializer::new(toml_str);
-    // let writer = BufWriter::new(File::create(&fp_out)?);
+    let result = match formatting {
+        JsonFormat::Normal => {
+            let mut serializer = Serializer::new(writer);
+            serde_transcode::transcode(deserializer, &mut serializer)
+        }
+        JsonFormat::Pretty => {
+            let mut serializer = Serializer::pretty(writer);
+            serde_transcode::transcode(deserializer, &mut serializer)
+        }
+    };
 
-    // let result = match formatting {
-    //     JsonFormat::Normal => {
-    //         let mut serializer = Serializer::new(writer);
-    //         serde_transcode::transcode(deserializer, &mut serializer)
-    //     }
-    //     JsonFormat::Pretty => {
-    //         let mut serializer = Serializer::pretty(writer);
-    //         serde_transcode::transcode(deserializer, &mut serializer)
-    //     }
-    // };
-
-    // match result {
-    //     Ok(_) => Ok(1),
-    //     Err(e) => Err(Box::new(e)),
-    // }
+    match result {
+        Ok(_) => Ok(1),
+        Err(e) => Err(Box::new(e)),
+    }
 }

@@ -214,16 +214,16 @@ fn cli(matches: &ArgMatches) -> Result<usize> {
 fn main() {
     println!("--- TOML to JSON ---");
 
-    let c = cmd().print_help();
-    
+    // let c = cmd().print_help();    
 
+    // TODO: debug `Flat` working like `Nested option`
     // TODO: remove when done testing
-    // let src = PathBuf::from(".\\data_toml");
-    // let tgt = PathBuf::from(".\\data_json");
+    let src = PathBuf::from(".\\data_toml");
+    let tgt = PathBuf::from(".\\data_json");
 
-    // let pretty = JsonFormat::Normal;
-    // let nested = Subdirs::Nested;
-    // let modified = Duration::MAX;
-    // let folders = from_toml_folders(&src, &tgt, modified, 3,  nested, pretty).unwrap();
-    // println!("number of files converted: {folders}");
+    let pretty = JsonFormat::Normal;
+    let nested = Subdirs::Flat;
+    let modified = Duration::MAX;
+    let folders = from_toml_folders(&src, &tgt, modified, 3,  nested, pretty).unwrap();
+    println!("number of files converted: {folders}");
 }
