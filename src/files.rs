@@ -1,11 +1,10 @@
 //! File handling functionality.
 
-use std::fmt::{Debug, Display};
-use std::fs::{self, File};
-use std::time::{Duration, SystemTime};
-use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
 use crate::Result;
+use std::fmt::Debug;
+use std::fs::{self, File};
+use std::path::{Path, PathBuf};
+use std::time::{Duration, SystemTime};
 
 /// Helper function to open and return a `File` object.
 pub fn open<P: AsRef<Path> + Debug>(path: P) -> Result<File> {
@@ -16,11 +15,7 @@ pub fn open<P: AsRef<Path> + Debug>(path: P) -> Result<File> {
 /// Gets filepaths for files of specified `extension` in the folder path.
 ///
 /// Can search recursively through folders according to `recursion` parameter.
-pub fn get_files<P>(
-    path: P,
-    recursion: usize,
-    extension: &str,
-) -> Result<Vec<PathBuf>>
+pub fn get_files<P>(path: P, recursion: usize, extension: &str) -> Result<Vec<PathBuf>>
 where
     P: AsRef<Path> + Debug,
 {
@@ -53,10 +48,7 @@ where
 }
 
 /// Gets filepaths for _subfolders_ in the folder path according to recursion depth.
-pub fn get_subfolders<P>(
-    path: P,
-    recursion: usize,
-) -> Result<Vec<PathBuf>>
+pub fn get_subfolders<P>(path: P, recursion: usize) -> Result<Vec<PathBuf>>
 where
     P: AsRef<Path> + Debug,
 {
@@ -67,8 +59,6 @@ where
     for entry in entries {
         if let Ok(entry) = entry {
             let path = entry.path();
-
-            println!("[get folders by name] path found: {:?}", path);
 
             if path.is_dir() {
                 result.push(path.clone());

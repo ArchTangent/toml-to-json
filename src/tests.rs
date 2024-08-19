@@ -7,27 +7,32 @@ fn parse_modified_value() {
     let valid_args = ["tomltojson", "/foo"];
     let matches = cmd().get_matches_from(&valid_args);
     let actual = parse_modified(&matches).unwrap();
-    assert_eq!(actual, Duration::MAX);
-
+    let expected = None;
+    assert_eq!(actual, expected);
+    
     let valid_args = ["tomltojson", "/foo", "-m", "30d"];
     let matches = cmd().get_matches_from(&valid_args);
     let actual = parse_modified(&matches).unwrap();
-    assert_eq!(actual, Duration::from_secs(2592000));
-
+    let expected = Some(Duration::from_secs(2592000));
+    assert_eq!(actual, expected);
+    
     let valid_args = ["tomltojson", "/foo", "-m", "60s"];
     let matches = cmd().get_matches_from(&valid_args);
     let actual = parse_modified(&matches).unwrap();
-    assert_eq!(actual, Duration::from_secs(60));
-
+    let expected = Some(Duration::from_secs(60));
+    assert_eq!(actual, expected);
+    
     let valid_args = ["tomltojson", "/foo", "-m", "60m"];
     let matches = cmd().get_matches_from(&valid_args);
     let actual = parse_modified(&matches).unwrap();
-    assert_eq!(actual, Duration::from_secs(3600));
-
+    let expected = Some(Duration::from_secs(3600));
+    assert_eq!(actual, expected);
+    
     let valid_args = ["tomltojson", "/foo", "-m", "24h"];
     let matches = cmd().get_matches_from(&valid_args);
     let actual = parse_modified(&matches).unwrap();
-    assert_eq!(actual, Duration::from_secs(86400));    
+    let expected = Some(Duration::from_secs(86400));    
+    assert_eq!(actual, expected);
 
     let error_strs = ["24hr", "abc", "a30m", "60j"];
 

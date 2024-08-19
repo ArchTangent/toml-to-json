@@ -10,9 +10,8 @@ mod to_json;
 mod tests;
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use std::fs::{File, FileType};
-use std::path::{Path, PathBuf};
-use std::time::{Duration, SystemTime};
+use std::path::PathBuf;
+use std::time::Duration;
 use to_json::{from_toml_folders, JsonFormat};
 
 /// The type of filepath, if any, for `<SOURCE>` and `[TARGET]` arguments.
@@ -27,7 +26,7 @@ pub enum PathType {
 pub fn cmd() -> Command {
     Command::new("tomltojson")
         .author("ArchTangent")
-        .version("0.5.0")
+        .version("0.6.0")
         .about("Converts TOML file(s) to JSON")
         // Positional Arg 1: <SOURCE>
         .arg(
@@ -60,8 +59,7 @@ pub fn cmd() -> Command {
                 .value_name("TIME")
                 .value_parser(clap::builder::StringValueParser::new())
                 .num_args(1)
-                // .help("converts only files modified within the past <TIME>, e.g. `60s`, `30m`, `24h`, `10d`"),
-                .help("Converts only files modified within the past <TIME>.\
+                .help("Converts only files modified within the past <TIME>. Applies only to folder conversions.\
                 \nExamples:\n- seconds: `10s`, `20s`\n- minutes: `30m`, `60m`\n- hours: `12h`, `24h`\
                 \n- days: `31d`, `365d`"),
         )
@@ -145,30 +143,30 @@ pub fn parse_target(matches: &ArgMatches, src_fp: &PathBuf, src_pt: PathType) ->
 /// - values ending in `m` are 'minutes', e.g. `10m`
 /// - values ending in `h` are 'hours', e.g. `1h`
 /// - values ending in `d` are 'days', e.g. `30d`
-pub fn parse_modified(matches: &ArgMatches) -> Result<Duration> {
+pub fn parse_modified(matches: &ArgMatches) -> Result<Option<Duration>> {
     let m: &String = match matches.get_one("modified") {
         Some(m) => m,
-        None => return Ok(Duration::MAX),
+        None => return Ok(None),
     };
 
     if let (true, Some(days_str)) = (m.ends_with('d'), m.strip_suffix('d')) {
         if let Ok(days) = days_str.parse::<u64>() {
-            return Ok(Duration::from_secs(days * 86400));
+            return Ok(Some(Duration::from_secs(days * 86400)));
         }
     }
     if let (true, Some(hours_str)) = (m.ends_with('h'), m.strip_suffix('h')) {
         if let Ok(hours) = hours_str.parse::<u64>() {
-            return Ok(Duration::from_secs(hours * 3600));
+            return Ok(Some(Duration::from_secs(hours * 3600)));
         }
     }
     if let (true, Some(minutes_str)) = (m.ends_with('m'), m.strip_suffix('m')) {
         if let Ok(minutes) = minutes_str.parse::<u64>() {
-            return Ok(Duration::from_secs(minutes * 60));
+            return Ok(Some(Duration::from_secs(minutes * 60)));
         }
     }
     if let (true, Some(seconds_str)) = (m.ends_with('s'), m.strip_suffix('s')) {
         if let Ok(seconds) = seconds_str.parse::<u64>() {
-            return Ok(Duration::from_secs(seconds));
+            return Ok(Some(Duration::from_secs(seconds)));
         }
     }
 
@@ -208,16 +206,17 @@ fn cli(matches: &ArgMatches) -> Result<usize> {
 }
 
 fn main() {
-    println!("--- TOML to JSON ---");
-
-    // let c = cmd().print_help();    
-
+    println!("tomltojson version {}", cmd().get_version().unwrap());
+    // let c = cmd();
+    // let matches = c.get_matches();
+    
     // TODO: remove when done testing
     let src = PathBuf::from(".\\data_toml");
     let tgt = PathBuf::from(".\\data_json");
 
-    let pretty = JsonFormat::Normal;
-    let modified = Duration::MAX;
-    let folders = from_toml_folders(&src, &tgt, modified, 3,  pretty).unwrap();
+    let pretty = JsonFormat::Pretty;
+    // let modified = Some(Duration::MAX);
+    let modified = Some(Duration::from_secs(10));
+    let folders = from_toml_folders(&src, &tgt, modified, 3, pretty).unwrap();
     println!("number of files converted: {folders}");
 }

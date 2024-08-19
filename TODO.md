@@ -15,22 +15,34 @@ Command `help`:
 
 - file-to-file conversion _always_ converts - `--modified` does not apply
 
-### Recursion (folder to folder)
+## Features
 
-- for starters, use `from_toml_folder()` to convert files in `source` folder to files in existing `target` folder
-- later, , use `from_toml_folders()` with _recursion_ to get _subfolders_, preserving subdirectory structure under `target`
+- `--list (-l)` option: take each TOML _dictionary_ of k:v pairs and convert into a _list_ of k:v pairs with an `id` field whose value is the top-level key. Example:
 
-When using the `--nested` option on some OSes, the program will crash if a given nested `target` subfolder does not already exist. See `std::fs::write()` for more.
+```toml
 
-### Modified filtering
+[foo]
+key1 = 1
 
-- for `from_toml_folders()`
-- for `from_toml_folders()`
-- for `from_toml()`
+[bar]
+key2 = 2
+```
+
+Becomes:
+
+```json
+[
+    {
+        "id": "foo",
+        "key1": 1,
+    },
+    {
+        "id": "bar",
+        "key2": 2,
+    }
+]
+```
 
 ## Readme File
 
-Usage
-- file to file
-- folder to folder
-- `--nested` set and unset for folder-to-folder
+- `--list` usage, if added
